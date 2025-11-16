@@ -1,0 +1,61 @@
+services:
+
+  db:
+    image: postgres:17-alpine
+    restart: on-failure
+    env_file:
+      - .env
+    expose:
+      - "5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "-c", "pg_isready -d $POSTGRES_DB -U $POSTGRES_USER" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    hostname: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    env_file:
+      - .env
+    volumes:
+      - rmq_data:/var/lib/rabbitmq
+    depends_on:
+      - db
+
+  app:
+      build: .
+      tty: true
+      ports:
+        - "8000:8000"
+      command: sh -c "python manage.py migrate && python manage.py csu && python manage.py runserver 0.0.0.0:8000"
+      depends_on:
+        db:
+          condition: service_healthy
+      volumes:
+        - .:/app
+      env_file:
+        - .env
+
+  celery-worker:
+    build: .
+    tty: true
+    command: celery -A config worker --loglevel=info
+    restart: on-failure
+    volumes:
+      - .:/app
+    depends_on:
+      - rabbitmq
+      - db
+      - app
+    env_file:
+      - .env
+
+volumes:
+  rmq_data:
+  pg_data:
