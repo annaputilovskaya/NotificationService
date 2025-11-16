@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import requests
 from django.core.mail import EmailMessage
 
+from config import settings
 from config.settings import EMAIL_HOST_USER, TELEGRAM_URL, TELEGRAM_TOKEN
 from notifications.utils import check_email_availability
 from recipients.models import Recipient
@@ -60,6 +61,9 @@ class EmailNotification(NotificationStrategy):
 
 
 class TelegramNotification(NotificationStrategy):
+    """
+    Уведомление через телеграм.
+    """
     def send(
         self, subject: str, message: str, recipient_list: list[Recipient]
     ) -> list[int | None]:
@@ -114,3 +118,67 @@ class TelegramNotification(NotificationStrategy):
                 results.append(recipient.pk)
 
         return results
+
+
+class SMSNotification(NotificationStrategy):
+    """
+    Уведомление по СМС.
+    """
+    def send(
+        self, subject: str, message: str, recipient_list: list[Recipient]
+    ) -> list[int | None]:
+        results = []
+        for recipient in recipient_list:
+            phone = recipient.phone
+            if phone:
+                payload = {
+                    "api_id": settings.SMS_API_KEY,
+                    "to": str(phone),
+                    "msg": message.encode("utf-8"),
+                    "from": settings.SMS_SENDER,
+                    "json": 1,
+                    "test": 1,               # TODO: Удалить на продакшене, используется для тестирования сервиса !!!
+                }
+                try:
+                    response = requests.post(
+                        "https://sms.ru/sms/send",
+                        data=payload,
+                    )
+                    res = response.json()
+                    if res.get("status") == "OK":
+                        logger.info(f"SMS {subject} sent successfully to {recipient.pk}.")
+                    else:
+                        logger.error(
+                            f"SMS {subject} delivery failed to {recipient.pk}: {res['sms'].get('status_text')}."
+                        )
+                        results.append(recipient.pk)
+
+                except requests.exceptions.RequestException as e:
+                    # Ошибка сети, DNS, таймаут или HTTP-ошибка
+                    logger.error(
+                        f"Net/HTTP error sending SMS {subject} to {recipient.pk}: {e}."
+                    )
+                    results.append(recipient.pk)
+                except Exception as e:
+                    # Другие непредвиденные ошибки
+                    logger.error(
+                        f"Unexpected error sending SMS message {subject} to {recipient.pk}: {e}."
+                    )
+                    results.append(recipient.pk)
+            else:
+                logger.error(
+                    f"SMS {subject} delivery failed to {recipient.pk}: there is no phone."
+                )
+                results.append(recipient.pk)
+        return results
+
+
+def get_strategies_map():
+    """
+    Получает стратегии уведомлений.
+    """
+    return {
+        "email": EmailNotification(),
+        "telegram": TelegramNotification(),
+        "sms": SMSNotification(),
+    }
