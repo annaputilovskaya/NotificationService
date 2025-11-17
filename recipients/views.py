@@ -20,7 +20,7 @@ from recipients.serializers import RecipientSerializer
     ),
 )
 @method_decorator(
-    name="read",
+    name="retrieve",
     decorator=swagger_auto_schema(
         operation_description="Контроллер просмотра получателя."
     ),
