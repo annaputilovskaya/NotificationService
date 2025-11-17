@@ -14,7 +14,7 @@ ALLOWED_HOSTS = ["*"]
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",                                      # TODO: add all allowed origins
+    "http://localhost:8000",  # TODO: add all allowed origins
 ]
 
 
@@ -205,10 +205,10 @@ LOGGING = {
             "level": "INFO",
             "propagate": True,
         },
-        'notifications': {
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
-            'propagate': True,
+        "notifications": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": True,
         },
     },
 }

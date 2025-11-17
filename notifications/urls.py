@@ -1,9 +1,9 @@
 from django.urls import path
 
 from notifications.apps import NotificationsConfig
-from notifications.views import (
-    NotificationCreateAPIView, NotificationListAPIView, NotificationRetrieveAPIView,
-)
+from notifications.views import (NotificationCreateAPIView,
+                                 NotificationListAPIView,
+                                 NotificationRetrieveAPIView)
 
 app_name = NotificationsConfig.name
 
