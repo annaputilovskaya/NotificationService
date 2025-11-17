@@ -10,9 +10,16 @@ logger = logging.getLogger(__name__)
 
 STRATEGY_ORDER = ("email", "telegram", "sms")
 RETRY_DELAY = 300
+MAX_RETRIES = 5
 
 
-@shared_task(bind=True, delivery_mode=2, acks_late=True, ignore_result=False)
+@shared_task(
+    bind=True,
+    delivery_mode=2,
+    acks_late=True,
+    ignore_result=False,
+    max_retries=MAX_RETRIES
+)
 def send_notification(
     self,
     notification_id: int,
