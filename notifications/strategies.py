@@ -5,7 +5,7 @@ import requests
 from django.core.mail import EmailMessage
 
 from config import settings
-from config.settings import EMAIL_HOST_USER, TELEGRAM_URL, TELEGRAM_TOKEN
+from config.settings import EMAIL_HOST_USER, TELEGRAM_TOKEN, TELEGRAM_URL
 from notifications.utils import check_email_availability
 from recipients.models import Recipient
 
@@ -15,21 +15,53 @@ logger = logging.getLogger(__name__)
 class NotificationStrategy(ABC):
     """
     Абстрактный базовый класс для различных стратегии уведомления.
+
+    Определяет общий интерфейс (контракт) для всех конкретных стратегий отправки
+    уведомлений.
     """
+
     @abstractmethod
     def send(
         self, subject: str, message: str, recipient_list: list[Recipient]
     ) -> list[int | None]:
+        """
+        Отправляет уведомление получателям.
+
+        Args:
+            subject (str): Тема или заголовок уведомления.
+            message (str): Текст сообщения.
+            recipient_list (list[Recipient]): Список объектов получателей.
+
+        Returns:
+            list[int | None]: Список PK получателей, которым не удалось отправить
+                сообщение, или None, если отправка прошла успешно.
+        """
         pass
 
 
 class EmailNotification(NotificationStrategy):
     """
-    Уведомление по электронной почте.
+    Стратегия уведомления по электронной почте.
+
+    Реализует метод send для отправки сообщений по email, используя
+    функционал Django EmailMessage.
     """
+
     def send(
         self, subject: str, message: str, recipient_list: list[Recipient]
     ) -> list[int | None]:
+        """
+        Отправляет электронные письма указанным получателям.
+
+        Args:
+            subject (str): Тема письма.
+            message (str): Тело письма.
+            recipient_list (list[Recipient]): Список получателей.
+
+        Returns:
+            list[int | None]: Список PK получателей, которым не удалось отправить
+                сообщение. Пустой список в случае успеха для всех.
+        """
         results = []
         for recipient in recipient_list:
             try:
@@ -62,11 +94,27 @@ class EmailNotification(NotificationStrategy):
 
 class TelegramNotification(NotificationStrategy):
     """
-    Уведомление через телеграм.
+    Стратегия уведомления через Telegram API.
+
+    Реализует метод send для отправки сообщений через бота Telegram с использованием
+    библиотеки requests.
     """
+
     def send(
         self, subject: str, message: str, recipient_list: list[Recipient]
     ) -> list[int | None]:
+        """
+        Отправляет сообщения в Telegram указанным получателям.
+
+        Args:
+            subject (str): Заголовок уведомления (используется для логов).
+            message (str): Текст сообщения.
+            recipient_list (list[Recipient]): Список получателей.
+
+        Returns:
+            list[int | None]: Список PK получателей, которым не удалось отправить
+                сообщение.
+        """
         results = []
         for recipient in recipient_list:
             tg_chat_id = recipient.tg_chat_id
@@ -122,11 +170,27 @@ class TelegramNotification(NotificationStrategy):
 
 class SMSNotification(NotificationStrategy):
     """
-    Уведомление по СМС.
+    Стратегия уведомления по СМС через внешний API (sms.ru).
+
+    Реализует метод send для отправки СМС, используя библиотеку requests
+    и настройки из файла settings.
     """
+
     def send(
         self, subject: str, message: str, recipient_list: list[Recipient]
     ) -> list[int | None]:
+        """
+        Отправляет СМС сообщения указанным получателям.
+
+        Args:
+            subject (str): Заголовок уведомления (используется для логов).
+            message (str): Текст сообщения.
+            recipient_list (list[Recipient]): Список получателей.
+
+        Returns:
+            list[int | None]: Список PK получателей, которым не удалось отправить
+                сообщение.
+        """
         results = []
         for recipient in recipient_list:
             phone = recipient.phone
@@ -137,7 +201,7 @@ class SMSNotification(NotificationStrategy):
                     "msg": message.encode("utf-8"),
                     "from": settings.SMS_SENDER,
                     "json": 1,
-                    "test": 1,               # TODO: Удалить на продакшене, используется для тестирования сервиса !!!
+                    "test": 1,  # TODO: Удалить на продакшене, используется для тестирования сервиса !!!
                 }
                 try:
                     response = requests.post(
@@ -146,7 +210,9 @@ class SMSNotification(NotificationStrategy):
                     )
                     res = response.json()
                     if res.get("status") == "OK":
-                        logger.info(f"SMS {subject} sent successfully to {recipient.pk}.")
+                        logger.info(
+                            f"SMS {subject} sent successfully to {recipient.pk}."
+                        )
                     else:
                         logger.error(
                             f"SMS {subject} delivery failed to {recipient.pk}: {res['sms'].get('status_text')}."
@@ -175,8 +241,13 @@ class SMSNotification(NotificationStrategy):
 
 def get_strategies_map():
     """
-    Получает стратегии уведомлений.
+    Получает словарь доступных стратегий уведомлений.
+
+    Returns:
+        dict[str, NotificationStrategy]: Словарь, где ключ — название стратегии
+            (например, "email"), а значение — экземпляр соответствующего класса стратегии.
     """
+
     return {
         "email": EmailNotification(),
         "telegram": TelegramNotification(),

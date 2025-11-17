@@ -1,16 +1,23 @@
 import logging
+
 from celery import shared_task
 from django.db import transaction
 
 from recipients.models import Recipient
+
 from .models import Notification
 from .strategies import get_strategies_map
 
 logger = logging.getLogger(__name__)
 
-STRATEGY_ORDER = ("email", "telegram", "sms")
-RETRY_DELAY = 300
-MAX_RETRIES = 5
+# Порядок перебора стратегий отправки уведомлений
+STRATEGY_ORDER: tuple[str, ...] = ("email", "telegram", "sms")
+
+# Задержка перед повторной попыткой выполнения задачи (в секундах)
+RETRY_DELAY: int = 300
+
+# Максимальное количество автоматических повторов задачи в случае сбоя
+MAX_RETRIES: int = 5
 
 
 @shared_task(
@@ -18,13 +25,30 @@ MAX_RETRIES = 5
     delivery_mode=2,
     acks_late=True,
     ignore_result=False,
-    max_retries=MAX_RETRIES
+    max_retries=MAX_RETRIES,
 )
 def send_notification(
     self,
     notification_id: int,
     recipient_ids: list[int],
 ):
+    """
+    Задача Celery для отправки уведомлений с использованием стратегий.
+
+    Пытается отправить уведомление через список стратегий (email, telegram, sms)
+    последовательно до тех пор, пока все получатели не будут уведомлены
+    или не закончатся доступные стратегии. При неудаче может повторить попытку.
+
+    Args:
+        self (Task): Экземпляр задачи Celery (при использовании bind=True).
+        notification_id (int): PK уведомления для отправки.
+        recipient_ids (list[int]): Список PK получателей, которым нужно отправить уведомление.
+
+    Raises:
+        self.retry: Если не удалось уведомить всех получателей или произошла ошибка БД/сети.
+        Notification.DoesNotExist: Если уведомление с данным ID не найдено.
+    """
+
     unnotified_recipient_ids = recipient_ids[:]
     try:
         # Получаем уведомление из БД

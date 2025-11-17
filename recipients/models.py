@@ -6,7 +6,17 @@ NULLABLE = {"blank": True, "null": True}
 
 class Recipient(models.Model):
     """
-    Модель получателя.
+    Модель получателя уведомлений.
+
+    Хранит контактную информацию о пользователях, которые могут получать
+    различные типы уведомлений (email, phone, Telegram).
+
+    Attributes:
+        first_name (str): Имя получателя. Может быть пустым.
+        last_name (str): Фамилия получателя. Может быть пустым.
+        email (str): Уникальный адрес электронной почты.
+        phone (str): Номер телефона (используется PhoneNumberField). Может быть пустым.
+        tg_chat_id (str): Уникальный ID чата Telegram для отправки сообщений. Может быть пустым.
     """
 
     first_name = models.CharField(max_length=100, verbose_name="Имя", **NULLABLE)
@@ -18,8 +28,18 @@ class Recipient(models.Model):
     )
 
     class Meta:
+        """
+        Метаданные модели Recipient.
+        """
+
         verbose_name = "Получатель"
         verbose_name_plural = "Получатели"
 
     def __str__(self):
+        """
+        Возвращает строковое представление объекта (email получателя).
+
+        Returns:
+            str: Email получателя.
+        """
         return f"{self.email}"
