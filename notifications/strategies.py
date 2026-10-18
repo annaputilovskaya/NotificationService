@@ -2,9 +2,9 @@ import logging
 from abc import ABC, abstractmethod
 
 import requests
-from django.conf import settings
 from django.core.mail import EmailMessage
 
+from config import settings
 from config.settings import EMAIL_HOST_USER, TELEGRAM_TOKEN, TELEGRAM_URL
 from notifications.utils import check_email_availability
 from recipients.models import Recipient
