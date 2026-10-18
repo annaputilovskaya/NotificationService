@@ -108,3 +108,18 @@ def test_exhausted_retries_are_reraised(mock_map, notification, recipient, caplo
 
 def test_missing_notification_is_logged_not_raised(db):
     send_notification(999999, [1])  # не должно поднимать исключение
+
+
+@patch("notifications.tasks.Notification.objects.get")
+def test_transient_db_error_triggers_retry(mock_get, db, caplog):
+    from django.db import OperationalError
+
+    mock_get.side_effect = OperationalError("connection lost")
+
+    with pytest.raises(Retry):
+        send_notification(999999, [1])
+
+    assert any(
+        record.levelname == "ERROR" and "database error" in record.message
+        for record in caplog.records
+    )

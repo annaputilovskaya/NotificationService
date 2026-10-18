@@ -2,7 +2,7 @@ import logging
 
 from celery import shared_task
 from celery.exceptions import MaxRetriesExceededError
-from django.db import transaction
+from django.db import OperationalError, transaction
 
 from recipients.models import Recipient
 
@@ -67,6 +67,7 @@ def send_notification(self, notification_id: int, recipient_ids: list[int]) -> N
         MaxRetriesExceededError: если ретраи исчерпаны (терминальное состояние).
     """
     unnotified_recipient_ids = recipient_ids[:]
+    transient_db_error = False
 
     try:
         with transaction.atomic():
@@ -77,17 +78,23 @@ def send_notification(self, notification_id: int, recipient_ids: list[int]) -> N
     except Notification.DoesNotExist:
         logger.error(f"Notification {notification_id} not found, stopping task.")
         return
+    except OperationalError as e:
+        logger.error(f"Notification {notification_id}: transient database error: {e}.")
+        transient_db_error = True
 
-    try:
-        unnotified_recipient_ids = _deliver(notification, unnotified_recipient_ids)
-    except Exception as e:
-        logger.error(f"Notification {notification_id}: unexpected delivery error: {e}.")
+    if not transient_db_error:
+        try:
+            unnotified_recipient_ids = _deliver(notification, unnotified_recipient_ids)
+        except Exception as e:
+            logger.error(
+                f"Notification {notification_id}: unexpected delivery error: {e}."
+            )
 
-    if not unnotified_recipient_ids:
-        notification.status = "COMPLETED"
-        notification.save()
-        logger.warning(f"Notification {notification.topic} completed successfully.")
-        return
+        if not unnotified_recipient_ids:
+            notification.status = "COMPLETED"
+            notification.save()
+            logger.warning(f"Notification {notification.topic} completed successfully.")
+            return
 
     try:
         raise self.retry(

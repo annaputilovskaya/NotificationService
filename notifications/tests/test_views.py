@@ -35,6 +35,25 @@ def test_create_sets_owner_and_dispatches_task(auth_client, user, recipient):
 
 
 @pytest.mark.django_db
+def test_status_is_read_only_for_client(auth_client, user, recipient):
+    with patch("notifications.views.send_notification.delay"):
+        response = auth_client.post(
+            "/notifications/create/",
+            {
+                "topic": "t",
+                "text": "x",
+                "status": "COMPLETED",
+                "recipients": [recipient.pk],
+            },
+            format="json",
+        )
+
+    assert response.status_code == 201
+    notification = Notification.objects.get()
+    assert notification.status == "CREATED"
+
+
+@pytest.mark.django_db
 def test_list_returns_only_own_notifications(auth_client, user, other_user):
     Notification.objects.create(topic="mine", owner=user)
     Notification.objects.create(topic="foreign", owner=other_user)

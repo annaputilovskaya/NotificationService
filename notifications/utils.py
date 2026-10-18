@@ -62,9 +62,6 @@ def check_email_availability(email, sender_email=EMAIL_HOST_USER, timeout=10):
                 if code == 250:
                     return
                 raise Exception("Email check failed using STARTTLS.") from None
-
-        except Exception as e:
-            return f"Произошла ошибка при работе с SMTP-сервером: {e}"
         finally:
             if "server" in locals() and server:
                 server.quit()
