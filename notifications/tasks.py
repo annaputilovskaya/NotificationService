@@ -91,10 +91,6 @@ def send_notification(self, notification_id: int, recipient_ids: list[int]) -> N
 
     try:
         raise self.retry(
-            exc=Exception(
-                f"Failed delivery to {len(unnotified_recipient_ids)} recipients "
-                "across all channels."
-            ),
             countdown=RETRY_DELAY,
             args=[notification_id, unnotified_recipient_ids],
         )
