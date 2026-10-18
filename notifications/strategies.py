@@ -2,9 +2,9 @@ import logging
 from abc import ABC, abstractmethod
 
 import requests
+from django.conf import settings
 from django.core.mail import EmailMessage
 
-from config import settings
 from config.settings import EMAIL_HOST_USER, TELEGRAM_TOKEN, TELEGRAM_URL
 from notifications.utils import check_email_availability
 from recipients.models import Recipient
@@ -119,7 +119,6 @@ class TelegramNotification(NotificationStrategy):
         for recipient in recipient_list:
             tg_chat_id = recipient.tg_chat_id
             if tg_chat_id:
-
                 payload = {
                     "chat_id": tg_chat_id,
                     "text": message,
@@ -139,9 +138,6 @@ class TelegramNotification(NotificationStrategy):
 
                     else:
                         # Сервер Telegram вернул ошибку, но статус HTTP был 200 OK
-                        print(
-                            f"Telegram message {subject} delivery failed to {recipient.pk}: {data.get('description')}"
-                        )
                         logger.error(
                             f"Telegram message {subject} delivery failed to {recipient.pk}: {data.get('description')}"
                         )
@@ -201,7 +197,7 @@ class SMSNotification(NotificationStrategy):
                     "msg": message.encode("utf-8"),
                     "from": settings.SMS_SENDER,
                     "json": 1,
-                    "test": 1,  # TODO: Удалить на продакшене, используется для тестирования сервиса !!!
+                    "test": 1 if settings.SMS_TEST else 0,
                 }
                 try:
                     response = requests.post(
