@@ -1,111 +1,127 @@
-# Сервис уведомлений
+# Notification Service
 
-### Задача: 
+[![CI](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml/badge.svg)](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/<USER>/<GIST_ID>/raw/coverage.json)](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 
-Создать сервис для отправки уведомлений пользователям.
-Пользователь может получать уведомления через:
-- Email
-- SMS
-- Telegram
-  
-Нужно обеспечить надежную доставку - если один способ не сработал, попробовать другой.
+An API for reliable delivery of notifications to users across multiple channels — Email, SMS, and Telegram — with automatic failover between channels.
 
----
-### Технический требования:
+[Русская версия](README.ru.md)
 
-- Язык программирования:
-  - Python 3.12
-- Фреймворк:
-  - Django Rest Framework
-- ORM:
-  - Django ORM
-- Хранение данных:
-  - PostgreSQL 17
-- Очереди сообщений:
-  - Celery + RabbitMQ
- 
----
-### Запуск проекта:
+## Features
 
-- Клонируйте проект:
-  ```bash
-  git clone https://github.com/annaputilovskaya/NotificationService.git
-  ```
-- Создайте файл .env в корне проекта по образцу (Файл .env.example) и заполните его данными.
-  
-  Команда для Unix-подобных систем для копирования файла:
-  ```bash
-  cp .env.example .env
-  ```
-- Убедитесь, что на Вашем устройстве установлен Docker.
-  
-  Проверка версии Docker:
-  ```bash
-  docker --version
-  ```
-  Если докер не установлен, [осуществите его установку по инструкции с официального сайта](https://www.docker.com/)
-  
-- Осуществите сборку образов и запуск контейнеров:
-  ```bash
-  docker compose up -d --build
-  ```
+- **Users** — email/password sign-up, issuing and refreshing JWT access tokens.
 
----
-### Структура базы данных:
+  <img width="1283" height="181" alt="Users" src="https://github.com/user-attachments/assets/7e4815d7-6b3d-4df3-8355-7259a6694f6e" />
 
-<img width="1189" height="757" alt="image" src="https://github.com/user-attachments/assets/7cfac615-f570-4744-85db-69e529d4a3b6" />
+- **Recipients** — create, view, update, and delete recipients.
 
----
-### Функционал и бизнес-логика
+  <img width="1285" height="324" alt="Recipients" src="https://github.com/user-attachments/assets/0b7015b5-3b83-481f-9e83-4d3cc3b31d81" />
 
-1. Пользователи:
-   - Регистрация с email и паролем
-   - Получение токена для авторизация
-   - ОБновление токена авторизации
+- **Notifications** — create a notification, view a single notification and a list.
 
-<img width="1283" height="181" alt="image" src="https://github.com/user-attachments/assets/7e4815d7-6b3d-4df3-8355-7259a6694f6e" />
+  <img width="1283" height="177" alt="Notifications" src="https://github.com/user-attachments/assets/4724f16d-c9ef-469c-bcaf-f63bb1f97a3d" />
 
+- **Reliable delivery (failover)** — creating a notification enqueues a Celery task. Strategies are tried in order **Email → Telegram → SMS**: when a channel fails, the next one is used. If no strategy succeeds for some recipients, delivery to those recipients is retried after a delay.
+- **Pagination** — list endpoints return a paginated `{"count": ..., "results": [...]}` payload (the `?page=` parameter).
+- **Logging** — delivery logs go to the console and to a file.
+- The service targets one-off notifications; recurring notifications are a possible extension.
 
+## Stack
 
-2. Получатели
-   - Создание получателя
-   - Просмотр получателя
-   - Просмотр списка получателей
-   - Изменение получтаеля
-   - Удаление получателя 
+- Python 3.12
+- Django REST Framework (Django ORM)
+- PostgreSQL 17
+- Celery + RabbitMQ
+- drf-yasg (Swagger/Redoc)
 
-<img width="1285" height="324" alt="image" src="https://github.com/user-attachments/assets/0b7015b5-3b83-481f-9e83-4d3cc3b31d81" />
+## Architecture
 
+```mermaid
+flowchart LR
+    Client[Client] --> API[Django REST API]
+    API -->|create notification| Task[Celery: send_notification]
+    Task --> Email[Email strategy]
+    Email -->|fail| Telegram[Telegram strategy]
+    Telegram -->|fail| SMS[SMS strategy]
+    Email --> SMTP[(SMTP)]
+    Telegram --> TG[(Telegram API)]
+    SMS --> SMSAPI[(sms.ru)]
+    Task --> DB[(PostgreSQL)]
+```
 
+## Data model
 
-3. Уведомления
-   - Создание уведомления
-   - Просмотр уведомления
-   - Просмотр списка уведомлений
-  
-<img width="1283" height="177" alt="image" src="https://github.com/user-attachments/assets/4724f16d-c9ef-469c-bcaf-f63bb1f97a3d" />
+<img width="1189" height="757" alt="Database schema" src="https://github.com/user-attachments/assets/7cfac615-f570-4744-85db-69e529d4a3b6" />
 
-  
-   При создания уведомления создается задача по отправке уведомления.
-   Происходит выбор стратегии отпраки уведомления в следующем порядке:
-   - Email
-   - Telegram
-   - SMS
-     
-   В случае, если первая стратегия не сработала, переходим ко второй, далее к третьей.
-   Если ни одна страегия отправки для каких-либо получателей не сработала, повторяем попытку отправки для этих получателей через определенный временной интервал.
-   
-   ---
-Сервис подходит для отправки разовых уведомлений. Если нужны повторяющиеся уведомления, возможна доработка. 
-   
-В проекте настроено логирование отправки уведомлений с отправкой логов в консоль и с сохранением в файл.
-   
-Проведено ручное тестирование проекта с помощью Postman.
-   
-Автоматизированное тестирование не проводилось.
+## Getting started
 
-Для более подробной информации об API ознакомьтесь с интерактивной документацией.
-   
-Если проект запущен на localhost, пройдите по [ссылке](http://localhost:8000/swagger/)
-   
-   
+### Prerequisites
+
+- Docker and Docker Compose
+
+### Configuration
+
+Copy `.env.example` to `.env` and fill in the values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Description | Example |
+|---|---|---|
+| `SECRET_KEY` | Django secret key | `django-insecure-...` |
+| `DEBUG` | Debug mode | `False` |
+| `ALLOWED_HOSTS` | Allowed hosts (comma-separated) | `localhost,127.0.0.1` |
+| `CORS_ALLOWED_ORIGINS` | Allowed CORS origins | `http://localhost:8000` |
+| `POSTGRES_*` | Database connection settings | `POSTGRES_DB=notifications` |
+| `CELERY_BROKER_URL` | Celery broker URL (RabbitMQ) | `amqp://user:pass@rabbitmq:5672//` |
+| `EMAIL_*` | Mail server settings | `EMAIL_HOST=smtp.example.com` |
+| `TELEGRAM_TOKEN` | Telegram bot token | `123456:ABC` |
+| `SMS_API_KEY` / `SMS_SENDER` | sms.ru credentials | `SMS_SENDER=Service` |
+| `SMS_TEST` | sms.ru test mode (does not send SMS) | `0` |
+
+### Install & run
+
+Clone the repository and start the services:
+
+```bash
+git clone https://github.com/annaputilovskaya/NotificationService.git
+cd NotificationService
+docker compose up -d --build
+```
+
+Verify Docker is installed (otherwise follow the [official instructions](https://www.docker.com/)):
+
+```bash
+docker --version
+```
+
+Interactive API documentation (Swagger): http://localhost:8000/swagger/
+
+## Tests
+
+Tests run against PostgreSQL. Start the database and run:
+
+```bash
+docker compose up -d db
+python -m pytest --cov
+```
+
+External services (SMTP, Telegram, sms.ru) are mocked. The project was originally checked manually via Postman; automated core and smoke tests are now in place.
+
+## Project structure
+
+```
+config/           # Django settings, Celery, urls
+notifications/    # notifications: model, strategies, Celery task
+recipients/       # recipients
+users/            # users, JWT
+conftest.py       # shared pytest fixtures
+pyproject.toml    # ruff/pytest/coverage config
+```
+
+## License
+
+Released under the MIT License — see [LICENSE](LICENSE).
