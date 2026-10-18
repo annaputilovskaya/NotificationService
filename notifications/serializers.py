@@ -1,20 +1,12 @@
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from notifications.models import Notification
 
 
-class NotificationSerializer(ModelSerializer):
-    """
-    Сериализатор для модели уведомления Notification.
-
-    Используется для преобразования экземпляров модели Notification в формат JSON
-    и обратно, а также для валидации данных.
-    """
+class NotificationSerializer(serializers.ModelSerializer):
+    """Сериализатор уведомления. Владелец назначается сервером."""
 
     class Meta:
-        """
-        Метаданные сериализатора NotificationSerializer.
-        """
-
         model = Notification
         fields = "__all__"
+        read_only_fields = ("owner", "status")

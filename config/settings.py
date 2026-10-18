@@ -8,13 +8,19 @@ load_dotenv()
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() in ("1", "true", "yes")
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 # CORS
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8000",  # TODO: add all allowed origins
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8000").split(",")
+    if origin.strip()
 ]
 
 
@@ -37,6 +43,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -44,7 +51,6 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    # "corsheaders.middleware.CorsMiddleware",                             TODO:  include CorsMiddleware
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -73,6 +79,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 20,
 }
 
 # Database
@@ -165,10 +173,12 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 # SMS
 SMS_API_KEY = os.getenv("SMS_API_KEY")
 SMS_SENDER = os.getenv("SMS_SENDER")
+SMS_TEST = os.getenv("SMS_TEST", "0") == "1"
 
 # Logging
 LOG_FILE_NAME = "notifications.log"
 LOG_FILE_PATH = os.path.join(BASE_DIR, "logs", LOG_FILE_NAME)
+os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
 LOGGING = {
     "version": 1,

@@ -7,53 +7,33 @@ from .tasks import send_notification
 
 
 class NotificationCreateAPIView(CreateAPIView):
-    """
-    Контроллер API для создания нового уведомления.
-
-    Предоставляет конечную точку для создания уведомления. После успешного
-    создания запускает асинхронную задачу Celery на отправку этого уведомления.
-
-    Attributes:
-        serializer_class (class): Сериализатор, используемый для валидации и десериализации данных.
-        permission_classes (tuple): Требуемые классы разрешений (только для аутентифицированных).
-    """
+    """Создание уведомления и постановка задачи на отправку."""
 
     serializer_class = NotificationSerializer
     permission_classes = (IsAuthenticated,)
 
-    def perform_create(self, serializer):
-        """
-        Сохраняет новый объект уведомления и запускает фоновую задачу отправки.
-
-        Args:
-            serializer (NotificationSerializer): Экземпляр сериализатора с валидными данными.
-        """
-        notification = serializer.save()
-
+    def perform_create(self, serializer) -> None:
+        """Сохраняет уведомление владельцем-текущим пользователем и ставит задачу."""
+        notification = serializer.save(owner=self.request.user)
         recipient_ids = list(notification.recipients.values_list("id", flat=True))
         send_notification.delay(notification.pk, recipient_ids)
 
 
 class NotificationRetrieveAPIView(RetrieveAPIView):
-    """
-    Контроллер API для просмотра деталей конкретного уведомления.
-
-    Предоставляет конечную точку для получения информации по одному уведомлению
-    по его PK/ID.
-    """
+    """Просмотр уведомления, принадлежащего текущему пользователю."""
 
     serializer_class = NotificationSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = Notification.objects.all()
+
+    def get_queryset(self):
+        return Notification.objects.filter(owner=self.request.user)
 
 
 class NotificationListAPIView(ListAPIView):
-    """
-    Контроллер API для просмотра списка всех уведомлений.
-
-    Предоставляет конечную точку для получения списка всех доступных уведомлений.
-    """
+    """Список уведомлений текущего пользователя."""
 
     serializer_class = NotificationSerializer
     permission_classes = (IsAuthenticated,)
-    queryset = Notification.objects.all()
+
+    def get_queryset(self):
+        return Notification.objects.filter(owner=self.request.user)

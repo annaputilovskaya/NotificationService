@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 from recipients.models import Recipient
@@ -30,6 +31,14 @@ class Notification(models.Model):
     status = models.CharField(
         max_length=30, choices=STATUS_CHOICES, default="CREATED", verbose_name="Статус"
     )
+    owner = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="notifications",
+        verbose_name="Владелец",
+        null=True,
+        blank=True,
+    )
     recipients = models.ManyToManyField(
         Recipient, verbose_name="Получатели", **NULLABLE
     )
@@ -42,11 +51,10 @@ class Notification(models.Model):
         verbose_name = "Уведомление"
         verbose_name_plural = "Уведомления"
 
-    def __str__(self):
-        """
-        Возвращает строковое представление объекта (тему уведомления).
+    def __str__(self) -> str:
+        """Возвращает тему уведомления или техническое имя.
 
         Returns:
-            str: Тема уведомления.
+            str: Тема уведомления либо строка вида ``Notification #<pk>``.
         """
-        return self.topic
+        return self.topic or f"Notification #{self.pk}"
