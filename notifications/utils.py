@@ -1,5 +1,4 @@
 import smtplib
-import socket
 
 import dns.resolver
 
@@ -25,8 +24,6 @@ def check_email_availability(email, sender_email=EMAIL_HOST_USER, timeout=10):
     """
 
     domain = email.split("@")[1]
-    # Установка общего таймаута для всех операций с сокетами
-    socket.setdefaulttimeout(timeout)
 
     try:
         # Получаем MX-записи домена
