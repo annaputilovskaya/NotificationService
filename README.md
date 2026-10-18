@@ -21,7 +21,7 @@ An API for reliable delivery of notifications to users across multiple channels 
 
 - **Notifications** — create a notification, view a single notification and a list.
 
-  <img width="1283" height="177" alt="Notifications" src="https://github.com/user-attachments/assets/4724f16d-c9ef-469c-bcaf-f63bb1f97a3d" />
+  <img width="1077" height="153" alt="Notifications" src="https://github.com/user-attachments/assets/ffaec4e6-269d-45a7-94ec-140b19d542f5" />
 
 - **Reliable delivery (failover)** — creating a notification enqueues a Celery task. Strategies are tried in order **Email → Telegram → SMS**: when a channel fails, the next one is used. If no strategy succeeds for some recipients, delivery to those recipients is retried after a delay.
 - **Pagination** — list endpoints return a paginated `{"count": ..., "results": [...]}` payload (the `?page=` parameter).
