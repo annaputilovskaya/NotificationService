@@ -1,11 +1,14 @@
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                     RetrieveAPIView, UpdateAPIView)
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    UpdateAPIView,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from users.models import User
-from users.serializers import (UserAdminSerializer, UserDetailSerializer,
-                               UserSerializer)
+from users.serializers import UserAdminSerializer, UserDetailSerializer, UserSerializer
 
 
 class UserCreateAPIView(CreateAPIView):
@@ -13,7 +16,7 @@ class UserCreateAPIView(CreateAPIView):
     Контроллер API для регистрации нового пользователя.
 
     Предоставляет конечную точку для создания нового пользователя с минимальным
-    набором полей (email). Устанавливает хешированный пароль после создания объекта.
+    набором полей (email). Пароль хешируется в сериализаторе.
 
     Attributes:
         serializer_class (class): Используемый сериализатор (UserSerializer).
@@ -22,17 +25,6 @@ class UserCreateAPIView(CreateAPIView):
 
     serializer_class = UserSerializer
     permission_classes = (AllowAny,)
-
-    def perform_create(self, serializer):
-        """
-        Сохраняет нового пользователя и хеширует его пароль.
-
-        Args:
-            serializer (UserSerializer): Экземпляр сериализатора с валидными данными.
-        """
-        user = serializer.save()
-        user.set_password(user.password)
-        user.save()
 
 
 class UserListAPIView(ListAPIView):

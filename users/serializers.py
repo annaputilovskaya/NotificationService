@@ -1,63 +1,57 @@
-from rest_framework.serializers import ModelSerializer
+from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
 
 from users.models import User
 
 
-class UserSerializer(ModelSerializer):
-    """
-    Сериализатор пользователя с ограничением информации (минимальный набор полей).
+class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор регистрации/краткой информации о пользователе."""
 
-    Используется для предоставления базовой информации о пользователе,
-    включая только ID и email.
-    """
+    password = serializers.CharField(write_only=True, validators=[validate_password])
 
     class Meta:
-        """
-        Метаданные сериализатора UserSerializer.
-        """
-
         model = User
-        fields = ("id", "email")
+        fields = ("id", "email", "password")
+
+    def create(self, validated_data: dict) -> User:
+        """Создаёт пользователя с хешированным паролем."""
+        password = validated_data.pop("password")
+        user = User(**validated_data)
+        user.set_password(password)
+        user.save()
+        return user
 
 
-class UserDetailSerializer(ModelSerializer):
-    """
-    Сериализатор профиля пользователя.
-
-    Используется для просмотра и обновления полного профиля пользователя,
-    за исключением полей, управляемых автоматически (статусы, даты).
-    """
+class UserDetailSerializer(serializers.ModelSerializer):
+    """Полный профиль пользователя без поля пароля."""
 
     class Meta:
-        """
-        Метаданные сериализатора UserDetailSerializer.
-        """
-
         model = User
-        fields = "__all__"
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "is_staff",
+            "is_superuser",
+            "date_joined",
+            "last_login",
+        )
         read_only_fields = (
             "id",
             "is_staff",
             "is_superuser",
             "is_active",
             "date_joined",
+            "last_login",
         )
 
 
-class UserAdminSerializer(ModelSerializer):
-    """
-    Сериализатор пользователя для администратора.
-
-    Предоставляет расширенный набор полей для управления пользователем
-    администратором, позволяя изменять статусы активности и привилегий,
-    но не ID, email или дату регистрации.
-    """
+class UserAdminSerializer(serializers.ModelSerializer):
+    """Сериализатор управления пользователем администратором."""
 
     class Meta:
-        """
-        Метаданные сериализатора UserAdminSerializer.
-        """
-
         model = User
         fields = ("id", "email", "is_staff", "is_superuser", "is_active", "date_joined")
         read_only_fields = ("id", "email", "date_joined")
