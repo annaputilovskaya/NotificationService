@@ -1,7 +1,7 @@
 # Notification Service
 
 [![CI](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml/badge.svg)](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml)
-[![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/<USER>/<GIST_ID>/raw/coverage.json)](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml)
+[![coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/annaputilovskaya/097e2cc0afbb6ee7fdbfb4d2d67bb87d/raw/coverage.json)](https://github.com/annaputilovskaya/NotificationService/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 

@@ -68,7 +68,7 @@ jobs:
         continue-on-error: true
         with:
           auth: ${{ secrets.GIST_TOKEN }}
-          gistID: <GIST_ID>
+          gistID: 097e2cc0afbb6ee7fdbfb4d2d67bb87d
           filename: coverage.json
           label: coverage
           message: ${{ steps.coverage.outputs.total }}
