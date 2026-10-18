@@ -1,11 +1,14 @@
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.generics import (CreateAPIView, ListAPIView,
-                                     RetrieveAPIView, UpdateAPIView)
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    UpdateAPIView,
+)
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from users.models import User
-from users.serializers import (UserAdminSerializer, UserDetailSerializer,
-                               UserSerializer)
+from users.serializers import UserAdminSerializer, UserDetailSerializer, UserSerializer
 
 
 class UserCreateAPIView(CreateAPIView):

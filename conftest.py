@@ -1,4 +1,4 @@
-﻿"""Общие фикстуры pytest."""
+"""Общие фикстуры pytest."""
 
 import pytest
 from rest_framework.test import APIClient
@@ -16,17 +16,13 @@ def api_client() -> APIClient:
 @pytest.fixture
 def user(db) -> User:
     """Обычный пользователь-владелец уведомлений."""
-    return User.objects.create_user(
-        email="user@example.com", password="Str0ng-pass-1"
-    )
+    return User.objects.create_user(email="user@example.com", password="Str0ng-pass-1")
 
 
 @pytest.fixture
 def other_user(db) -> User:
     """Второй пользователь (для проверки изоляции данных)."""
-    return User.objects.create_user(
-        email="other@example.com", password="Str0ng-pass-1"
-    )
+    return User.objects.create_user(email="other@example.com", password="Str0ng-pass-1")
 
 
 @pytest.fixture

@@ -26,7 +26,8 @@ def test_valid_email_returns_none(mock_smtp_cls, mock_resolve):
 def test_invalid_email_raises(mock_resolve):
     mock_resolve.side_effect = Exception("no dns")
 
-    with pytest.raises(Exception):
+    # noqa: B017 — контракт функции (plan-frozen) — слепой Exception
+    with pytest.raises(Exception):  # noqa: B017
         check_email_availability("user@example.com")
 
 
@@ -35,7 +36,8 @@ def test_does_not_mutate_global_socket_timeout(mock_resolve):
     mock_resolve.side_effect = Exception("no dns")
     default_before = socket.getdefaulttimeout()
 
-    with pytest.raises(Exception):
+    # noqa: B017 — контракт функции (plan-frozen) — слепой Exception
+    with pytest.raises(Exception):  # noqa: B017
         check_email_availability("user@example.com", timeout=1)
 
     assert socket.getdefaulttimeout() == default_before

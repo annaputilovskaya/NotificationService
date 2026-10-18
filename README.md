@@ -28,25 +28,25 @@
 ### Запуск проекта:
 
 - Клонируйте проект:
-  ```python
+  ```bash
   git clone https://github.com/annaputilovskaya/NotificationService.git
   ```
 - Создайте файл .env в корне проекта по образцу (Файл .env.example) и заполните его данными.
   
   Команда для Unix-подобных систем для копирования файла:
-  ```python
+  ```bash
   cp .env.example .env
   ```
 - Убедитесь, что на Вашем устройстве установлен Docker.
   
   Проверка версии Docker:
-  ```python
+  ```bash
   docker --version
   ```
   Если докер не установлен, [осуществите его установку по инструкции с официального сайта](https://www.docker.com/)
   
 - Осуществите сборку образов и запуск контейнеров:
-  ```python
+  ```bash
   docker compose up -d --build
   ```
 

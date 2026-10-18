@@ -49,7 +49,7 @@ def check_email_availability(email, sender_email=EMAIL_HOST_USER, timeout=10):
                 f"Email is likely invalid/unavailable. Code {code}: {message.decode()}"
             )
 
-        except smtplib.SMTPConnectError as e:
+        except smtplib.SMTPConnectError:
             # Попытка подключения через порт 587 с STARTTLS
             server = smtplib.SMTP(mx_record, 587, timeout=timeout)
             server.set_debuglevel(0)
@@ -61,7 +61,7 @@ def check_email_availability(email, sender_email=EMAIL_HOST_USER, timeout=10):
                 code, message = server.rcpt(str(email))
                 if code == 250:
                     return
-                raise Exception(f"Email check failed using STARTTLS.")
+                raise Exception("Email check failed using STARTTLS.") from None
 
         except Exception as e:
             return f"Произошла ошибка при работе с SMTP-сервером: {e}"
@@ -70,8 +70,10 @@ def check_email_availability(email, sender_email=EMAIL_HOST_USER, timeout=10):
                 server.quit()
 
     except dns.resolver.NoMXSError:
-        raise Exception("Домен не имеет MX-записей.")
+        raise Exception("Домен не имеет MX-записей.") from None
     except dns.resolver.NXDOMAIN:
-        raise Exception("Домен не существует.")
+        raise Exception("Домен не существует.") from None
     except Exception as e:
-        raise Exception(f"Произошла ошибка при разрешении DNS или другая ошибка: {e}")
+        raise Exception(
+            f"Произошла ошибка при разрешении DNS или другая ошибка: {e}"
+        ) from e
