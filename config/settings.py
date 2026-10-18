@@ -178,6 +178,7 @@ SMS_TEST = os.getenv("SMS_TEST", "0") == "1"
 # Logging
 LOG_FILE_NAME = "notifications.log"
 LOG_FILE_PATH = os.path.join(BASE_DIR, "logs", LOG_FILE_NAME)
+os.makedirs(os.path.dirname(LOG_FILE_PATH), exist_ok=True)
 
 LOGGING = {
     "version": 1,
