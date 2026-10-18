@@ -40,15 +40,15 @@ An API for reliable delivery of notifications to users across multiple channels 
 
 ```mermaid
 flowchart LR
-    Client[Client] --> API[Django REST API]
-    API -->|create notification| Task[Celery: send_notification]
-    Task --> Email[Email strategy]
-    Email -->|fail| Telegram[Telegram strategy]
-    Telegram -->|fail| SMS[SMS strategy]
-    Email --> SMTP[(SMTP)]
-    Telegram --> TG[(Telegram API)]
-    SMS --> SMSAPI[(sms.ru)]
-    Task --> DB[(PostgreSQL)]
+    Client["Client"] --> API["Django REST API"]
+    API -->|create notification| Task["Celery: send_notification"]
+    Task --> Email["Email strategy"]
+    Email -->|fail| Telegram["Telegram strategy"]
+    Telegram -->|fail| SMS["SMS strategy"]
+    Email --> SMTP[("SMTP")]
+    Telegram --> TG[("Telegram API")]
+    SMS --> SMSAPI[("sms.ru")]
+    Task --> DB[("PostgreSQL")]
 ```
 
 ## Data model

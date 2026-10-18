@@ -40,15 +40,15 @@ API для надёжной доставки уведомлений пользо
 
 ```mermaid
 flowchart LR
-    Client[Клиент] --> API[Django REST API]
-    API -->|создание уведомления| Task[Celery: send_notification]
-    Task --> Email[Email strategy]
-    Email -->|fail| Telegram[Telegram strategy]
-    Telegram -->|fail| SMS[SMS strategy]
-    Email --> SMTP[(SMTP)]
-    Telegram --> TG[(Telegram API)]
-    SMS --> SMSAPI[(sms.ru)]
-    Task --> DB[(PostgreSQL)]
+    Client["Клиент"] --> API["Django REST API"]
+    API -->|создание уведомления| Task["Celery: send_notification"]
+    Task --> Email["Email strategy"]
+    Email -->|fail| Telegram["Telegram strategy"]
+    Telegram -->|fail| SMS["SMS strategy"]
+    Email --> SMTP[("SMTP")]
+    Telegram --> TG[("Telegram API")]
+    SMS --> SMSAPI[("sms.ru")]
+    Task --> DB[("PostgreSQL")]
 ```
 
 ## Модель данных
