@@ -7,15 +7,13 @@ from users.models import User
 class UserSerializer(serializers.ModelSerializer):
     """Сериализатор регистрации/краткой информации о пользователе."""
 
-    password = serializers.CharField(
-        write_only=True, validators=[validate_password]
-    )
+    password = serializers.CharField(write_only=True, validators=[validate_password])
 
     class Meta:
         model = User
         fields = ("id", "email", "password")
 
-    def create(self, validated_data) -> User:
+    def create(self, validated_data: dict) -> User:
         """Создаёт пользователя с хешированным паролем."""
         password = validated_data.pop("password")
         user = User(**validated_data)
